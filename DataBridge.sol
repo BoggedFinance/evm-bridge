@@ -124,11 +124,21 @@ contract DataBridge is IDataBridge, Auth, Pausable {
     
     mapping (address => bool) private relayers;
     
-    uint256 public signatureThreshold;
+    uint256 public signatureThreshold = 2;
     mapping (address => bool) private signers;
     mapping (uint256 => mapping (uint256 => mapping (address => bool))) private signed;
     
-    constructor () Auth(msg.sender) {}
+    constructor (uint256[] memory _chains, address[] memory _relayers, address[] memory _signers) Auth(msg.sender) {
+        for(uint256 i = 0; i<_chains.length; i++){
+            supportedChain[_chains[i]] = true;
+        }
+        for(uint256 i = 0; i<_relayers.length; i++){
+            relayers[_relayers[i]] = true;
+        }
+        for(uint256 i = 0; i<_signers.length; i++){
+            signers[_signers[i]] = true;
+        }
+    }
     
     modifier onlyRelayer() {
         require(relayers[msg.sender], "DataBridge: ONLY_RELAYER");
