@@ -140,6 +140,8 @@ contract TokenBridge is Auth, Pausable, IDataReceiver {
     address public staking;
     uint256 public stakingFee;
     
+    uint256 public minBridgeAmount;
+    
     mapping (uint256 => address) public tokenBridges;
     
     constructor(IBEP20 _token, IDataBridge _bridge) Auth(msg.sender) {
@@ -149,18 +151,26 @@ contract TokenBridge is Auth, Pausable, IDataReceiver {
     
     function setTokenBridge(uint256 chain, address tokenBridge) external onlyOwner {
         tokenBridges[chain] = tokenBridge;
+        emit TokenBridgeUpdated(chain, tokenBridge);
     }
     
     function setTreasuryFee(uint256 fee, address receiver) external onlyOwner {
         require(fee < 100, "Fee limit exceeded");
         treasuryFee = fee;
         treasury = receiver;
+        emit TreasuryFeeUpdated(fee, receiver);
     }
     
     function setStakingFee(uint256 fee, address receiver) external onlyOwner {
         require(fee < 100, "Fee limit exceeded");
         stakingFee = fee;
         staking = receiver;
+        emit StakingFeeUpdated(fee, receiver);
+    }
+    
+    function setMinBridgeAmount(uint256 amount) external onlyOwner {
+        minBridgeAmount = amount;
+        emit MinBridgeAmountUpdated(amount);
     }
     
     function bridgeCall(uint256 fromChain, address fromAddress, bytes32 method, bytes memory data) external override notPaused {
@@ -175,6 +185,8 @@ contract TokenBridge is Auth, Pausable, IDataReceiver {
     function bridgeTokens(uint256 dstChain, uint256 amount) external notPaused {
         address receiver = tokenBridges[dstChain];
         require(receiver != address(0), "Unsupported Chain");
+        
+        require(amount >= minBridgeAmount, "Insufficient Amount");
         
         token.transferFrom(msg.sender, address(this), amount);
         
@@ -192,11 +204,10 @@ contract TokenBridge is Auth, Pausable, IDataReceiver {
         return amount - feeToTreasury - feeToStaking;
     }
     
-    function returnTokens(uint256 amount) external onlyOwner {
-        token.transfer(msg.sender, amount);
-    }
-    
     event TokenBridgeUpdated(uint256 chain, address tokenBridge);
+    event TreasuryFeeUpdated(uint256 fee, address receiver);
+    event StakingFeeUpdated(uint256 fee, address receiver);
+    event MinBridgeAmountUpdated(uint256 amount);
 }
 
 contract MintableTokenBridge is Auth, Pausable, IDataReceiver {
@@ -211,6 +222,8 @@ contract MintableTokenBridge is Auth, Pausable, IDataReceiver {
     address public staking;
     uint256 public stakingFee;
     
+    uint256 public minBridgeAmount;
+    
     mapping (uint256 => address) public tokenBridges;
     
     constructor(IBEP20Mintable _token, IDataBridge _bridge) Auth(msg.sender) {
@@ -220,18 +233,26 @@ contract MintableTokenBridge is Auth, Pausable, IDataReceiver {
     
     function setTokenBridge(uint256 chain, address tokenBridge) external onlyOwner {
         tokenBridges[chain] = tokenBridge;
+        emit TokenBridgeUpdated(chain, tokenBridge);
     }
     
     function setTreasuryFee(uint256 fee, address receiver) external onlyOwner {
         require(fee < 100, "Fee limit exceeded");
         treasuryFee = fee;
         treasury = receiver;
+        emit TreasuryFeeUpdated(fee, receiver);
     }
     
     function setStakingFee(uint256 fee, address receiver) external onlyOwner {
         require(fee < 100, "Fee limit exceeded");
         stakingFee = fee;
         staking = receiver;
+        emit StakingFeeUpdated(fee, receiver);
+    }
+    
+    function setMinBridgeAmount(uint256 amount) external onlyOwner {
+        minBridgeAmount = amount;
+        emit MinBridgeAmountUpdated(amount);
     }
     
     function bridgeCall(uint256 fromChain, address fromAddress, bytes32 method, bytes memory data) external override notPaused {
@@ -249,6 +270,8 @@ contract MintableTokenBridge is Auth, Pausable, IDataReceiver {
         address receiver = tokenBridges[dstChain];
         require(receiver != address(0), "Unsupported Chain");
         
+        require(amount >= minBridgeAmount, "Insufficient Amount");
+        
         token.transferFrom(msg.sender, address(this), amount);
         uint256 amountAfterFee = takeFee(amount);
         token.burn(amountAfterFee);
@@ -264,6 +287,7 @@ contract MintableTokenBridge is Auth, Pausable, IDataReceiver {
         uint256 feeToStaking = stakingFee * amount / 10000;
         if(feeToStaking > 0)
             token.transfer(staking, feeToStaking);
+            
         return amount - feeToTreasury - feeToStaking;
     }
     
@@ -272,4 +296,8 @@ contract MintableTokenBridge is Auth, Pausable, IDataReceiver {
     }
     
     event TokenBridgeUpdated(uint256 chain, address tokenBridge);
+    event TreasuryFeeUpdated(uint256 fee, address receiver);
+    event StakingFeeUpdated(uint256 fee, address receiver);
+    event MinBridgeAmountUpdated(uint256 amount);
 }
+
