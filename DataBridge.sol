@@ -44,9 +44,9 @@ abstract contract Auth {
         emit OwnershipTransferred(adr);
     }
 
-    event OwnershipTransferred(address owner);
-    event Authorized(address adr);
-    event Unauthorized(address adr);
+    event OwnershipTransferred(address indexed owner);
+    event Authorized(address indexed adr);
+    event Unauthorized(address indexed adr);
 }
 
 abstract contract Pausable is Auth {
@@ -99,8 +99,8 @@ interface IDataBridge {
         
     event RequestSubmitted(Request);
     event RequestReceived(Request, RequestStatus);
-    event RelayerUpdated(address relayer, bool state);
-    event SignerUpdated(address signer, bool state);
+    event RelayerUpdated(address indexed relayer, bool state);
+    event SignerUpdated(address indexed signer, bool state);
     event SignatureThresholdUpdated(uint256 threshold);
     event SupportedChainUpdated(uint256 chain, bool state);
 }
