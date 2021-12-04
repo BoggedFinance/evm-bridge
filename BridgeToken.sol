@@ -141,7 +141,7 @@ contract BOG is IERC20, Ownable {
         emit IsFeeExemptUpdated(adr, exempt);
     }
     
-    function burn(uint256 amount) external {
+    function burn(uint256 amount) external onlyOwner {
         require(balances[msg.sender] >= amount, "Insufficient Balance");
         balances[msg.sender] -= amount;
         totalSupply -= amount;
