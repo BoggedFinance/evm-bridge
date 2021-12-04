@@ -33,7 +33,7 @@ abstract contract Ownable {
         emit OwnershipTransferred(adr);
     }
 
-    event OwnershipTransferred(address owner);
+    event OwnershipTransferred(address indexed owner);
 }
 
 contract BOG is IERC20, Ownable {
@@ -68,8 +68,7 @@ contract BOG is IERC20, Ownable {
     }
     
     function approve(address spender, uint256 amount) external override returns (bool) {
-        allowances[msg.sender][spender] = amount;
-        emit Approval(msg.sender, spender, amount);
+        _approve(msg.sender, spender, amount);
         return true;
     }
     
@@ -80,9 +79,14 @@ contract BOG is IERC20, Ownable {
     
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         require(allowances[sender][msg.sender] >= amount, "Insufficient Allowance");
-        allowances[sender][msg.sender] -= amount;
+        _approve(sender, msg.sender, allowances[sender][msg.sender] - amount);
         _transfer(sender, recipient, amount);
         return true;
+    }
+    
+    function _approve(address _owner, address spender, uint256 amount) internal {
+        allowances[_owner][spender] = amount;
+        emit Approval(_owner, spender, amount);
     }
     
     function _transfer(address sender, address recipient, uint256 amount) internal {
@@ -151,9 +155,7 @@ contract BOG is IERC20, Ownable {
         emit Transfer(address(0), msg.sender, amount);
     }
     
-    event FeesUpdated(uint256 buyFee, uint256 sellFee, uint256 feeDenominator, address feeReceiver);
-    event HasFeeUpdated(address adr, bool hasBuyFee, bool hasSellFee);
-    event IsFeeExemptUpdated(address adr, bool exempt);
+    event FeesUpdated(uint256 buyFee, uint256 sellFee, uint256 feeDenominator, address indexed feeReceiver);
+    event HasFeeUpdated(address indexed adr, bool hasBuyFee, bool hasSellFee);
+    event IsFeeExemptUpdated(address indexed adr, bool exempt);
 }
-
-
